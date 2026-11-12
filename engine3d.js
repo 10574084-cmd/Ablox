@@ -119,14 +119,16 @@ class Ablox3DEngine{
       this.goal={x:0,z:112};
     }else if(g.type==='coin'){
       this.scene.background=new T.Color(0x79c5d0);this.scene.fog=new T.Fog(0x9ccfc3,55,115);
-      this.addPlane(70,70,-.08,0x78a978);
-      this.addBox(0,-.20,16,46,.35,48,0x827a66,{castShadow:false});
-      this.addBox(0,-.005,16,12,.05,48,0x3c4651,{castShadow:false});
-      for(let z=-5;z<42;z+=7){this.addBox(0,.03,z, .18,.035,3.1,0xf1d98c,{castShadow:false});}
+      this.addPlane(100,140,-.08,0x78a978);
+      this.addBox(0,-.20,26,46,.35,72,0x827a66,{castShadow:false});
+      this.addBox(0,-.005,26,12,.05,72,0x3c4651,{castShadow:false});
+      for(let z=-5;z<62;z+=7){this.addBox(0,.03,z, .18,.035,3.1,0xf1d98c,{castShadow:false});}
       const buildings=[
         [-15,8,7,7,0x5d91ae],[-14,24,8,9,0xd08c69],[-7,34,6,7,0x6d8eaa],
         [14,7,8,8,0xb87978],[15,23,7,11,0x7b83b7],[8,36,8,7,0xd5b66b],
-        [-15,-8,8,7,0x9a8bb9],[14,-8,7,6,0x5b9a91],[0,41,7,7,0x9d7cae]
+        [-15,-8,8,7,0x9a8bb9],[14,-8,7,6,0x5b9a91],[0,41,7,7,0x9d7cae],
+        [-16,52,8,10,0x6f8eaa],[15,55,8,8,0xc58b69],[-7,62,7,9,0x8c7fae],[7,67,8,7,0x6d9c81],
+        [-19,30,5,6,0xb28b67],[19,45,5,8,0x6d89ad]
       ];
       buildings.forEach((b,i)=>{
         const h=b[3],x=b[0],z=b[1],w=b[2],color=b[4];this.addBox(x,h/2,z,w,h,w*.85,color);
@@ -140,11 +142,11 @@ class Ablox3DEngine{
         this.addBox(x,.65,z,.28,1.3,.28,0x75533d);
         const crown=new T.Mesh(new T.SphereGeometry(1.15,10,8),this.material(i%2?0x4a9b70:0x5da578));crown.position.set(x,1.8,z);crown.castShadow=true;this.scene.add(crown);
       }
-      for(let i=0;i<34;i++)this.addCoin(((i*13)%36)-18,1.05,-3+((i*11)%43));
+      for(let i=0;i<44;i++)this.addCoin(((i*13)%38)-19,1.05,-3+((i*11)%68));
       this.player={x:0,y:0,z:-2,vy:0,ground:true};
     }else if(g.type==='race'){
       this.scene.background=new T.Color(0x211b46);this.scene.fog=new T.Fog(0x46345f,90,310);
-      this.addPlane(100,720,-.18,0x34304d);
+      this.addPlane(100,1000,-.18,0x34304d);
       this.addBox(0,-.20,440,12,.4,920,0x252b42,{castShadow:false});
       this.addBox(-6.25,-.08,440,.5,.25,920,0x6a53a7,{castShadow:false});
       this.addBox(6.25,-.08,440,.5,.25,920,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:.58}});
@@ -380,13 +382,13 @@ class Ablox3DEngine{
     const inputX=Math.max(-1,Math.min(1,(right?1:0)-(left?1:0)+this.joystick.x));
     const inputZ=Math.max(-1,Math.min(1,(forward?1:0)-(back?1:0)+this.joystick.y));
     const length=Math.hypot(inputX,inputZ)||1;let moveX=0,moveZ=0;
-    if(this.game.type==='race'){p.z+=dt*13;moveX=inputX; p.x+=(-moveX*Math.cos(this.yaw))*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));}
+    if(this.game.type==='race'){p.z+=dt*13;moveX=inputX;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));}
     else if(this.game.type==='boat'&&this.boatPhase==='sail'){p.z+=dt*8.6;moveX=-inputX;p.x+=moveX*7.5*dt;p.x=Math.max(-6.5,Math.min(6.5,p.x));p.y=0;p.vy=0;p.ground=true;}
     else if(this.game.type==='boat'&&this.boatPhase==='built'){p.y=0;p.vy=0;p.ground=true;}
     else{
-      const c=Math.cos(this.yaw),sn=Math.sin(this.yaw);moveX=-(inputX/length)*c-(inputZ/length)*sn;moveZ=-(inputX/length)*sn+(inputZ/length)*c;
+      const c=Math.cos(this.yaw),sn=Math.sin(this.yaw);moveX=(inputX/length)*c-(inputZ/length)*sn;moveZ=(inputX/length)*sn+(inputZ/length)*c;
       const speed=8;p.x+=moveX*speed*dt;p.z+=moveZ*speed*dt;
-      if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(45,p.z));}
+      if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(66,p.z));}
       if(this.game.type==='brainrot'||this.game.type==='egg'){p.x=Math.max(-23,Math.min(23,p.x));p.z=Math.max(-24,Math.min(62,p.z));}
       if(this.game.type==='boat'&&this.boatPhase==='gather'){p.x=Math.max(-18,Math.min(18,p.x));p.z=Math.max(-28,Math.min(-1,p.z));}
     }
