@@ -30,7 +30,11 @@ class Ablox3DEngine{
     canvas.addEventListener('pointerdown',this.pointerDown);window.addEventListener('pointermove',this.pointerMove);
     window.addEventListener('pointerup',this.pointerUp);window.addEventListener('pointercancel',this.pointerUp);
     canvas.addEventListener('wheel',this.wheel,{passive:false});canvas.addEventListener('contextmenu',e=>e.preventDefault());
-    this.touchButtons=Array.from(document.querySelectorAll('[data-key]'));
+    this.touchButtons=Array.from(document.querySelectorAll('[data-key]'));this.joystick={x:0,y:0};this.joystickElement=document.getElementById('moveJoystick');this.joystickNub=document.getElementById('joystickNub');
+    this.joystickDown=e=>{e.preventDefault();e.stopPropagation();this.joyPointer=e.pointerId;try{this.joystickElement.setPointerCapture(e.pointerId)}catch(err){}this.updateJoystick(e)};
+    this.joystickMove=e=>{if(e.pointerId===this.joyPointer){e.preventDefault();e.stopPropagation();this.updateJoystick(e)}};
+    this.joystickUp=e=>{if(e.pointerId===this.joyPointer){e.preventDefault();e.stopPropagation();this.joyPointer=null;this.joystick.x=0;this.joystick.y=0;if(this.joystickNub)this.joystickNub.style.transform='translate(-50%,-50%)'}};
+    if(this.joystickElement){this.joystickElement.addEventListener('pointerdown',this.joystickDown);this.joystickElement.addEventListener('pointermove',this.joystickMove);this.joystickElement.addEventListener('pointerup',this.joystickUp);this.joystickElement.addEventListener('pointercancel',this.joystickUp)}
     this.touchStart=e=>{e.preventDefault();this.keys[e.currentTarget.dataset.key]=true;};
     this.touchEnd=e=>{e.preventDefault();this.keys[e.currentTarget.dataset.key]=false;};
     this.touchButtons.forEach(b=>{b.addEventListener('pointerdown',this.touchStart);b.addEventListener('pointerup',this.touchEnd);b.addEventListener('pointercancel',this.touchEnd);b.addEventListener('pointerleave',this.touchEnd);});
@@ -40,11 +44,29 @@ class Ablox3DEngine{
   saveBest(){if(this.score>this.best){this.best=this.score;try{localStorage.setItem('ablox-best-'+this.game.id,String(this.best));}catch(e){}$('bestValue').textContent=this.best;}}
   addLights(){
     const T=this.T;
+    if(this.game.type==='race'){
+      this.scene.add(new T.HemisphereLight(0x829cff,0x17152e,.48));
+      this.scene.add(new T.AmbientLight(0x252852,.42));
+      const moon=new T.DirectionalLight(0x9eabff,.72);moon.position.set(-22,34,-18);this.scene.add(moon);
+      const cyan=new T.PointLight(0x36e7ff,1.6,55,2);cyan.position.set(-7,9,8);this.scene.add(cyan);
+      const violet=new T.PointLight(0xb26aff,1.3,50,2);violet.position.set(7,8,44);this.scene.add(violet);
+      return;
+    }
     this.scene.add(new T.HemisphereLight(0xeaf4ff,0x53616c,1.45));
     const sun=new T.DirectionalLight(0xfff4df,2.0);sun.position.set(-18,28,-12);sun.castShadow=true;
     sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=.5;sun.shadow.camera.far=180;
     this.scene.add(sun);
     const fill=new T.DirectionalLight(0x9ebcff,.65);fill.position.set(15,12,25);this.scene.add(fill);
+  }
+  addNightLamp(x,z,color){
+    const T=this.T;
+    this.addBox(x,2.9,z,.22,5.8,.22,0x343853,{castShadow:false});
+    this.addBox(x,5.75,z,.8,.18,.8,color,{castShadow:false,material:{emissive:color,emissiveIntensity:2.1,metalness:.25,roughness:.3}});
+    const glow=new T.Mesh(new T.SphereGeometry(.34,12,8),new T.MeshBasicMaterial({color:color}));
+    glow.position.set(x,5.45,z);this.scene.add(glow);
+    const light=new T.PointLight(color,8.5,31,2);light.position.set(x,5.3,z);this.scene.add(light);
+    const halo=new T.Mesh(new T.SphereGeometry(.55,10,8),new T.MeshBasicMaterial({color:color,transparent:true,opacity:.08,depthWrite:false}));
+    halo.position.copy(light.position);this.scene.add(halo);
   }
   material(color,roughness=.82,metalness=.02,extra={}){
     return new this.T.MeshStandardMaterial(Object.assign({color:color,roughness:roughness,metalness:metalness},extra));
@@ -123,12 +145,27 @@ class Ablox3DEngine{
       this.addPlane(100,720,-.18,0x34304d);
       this.addBox(0,-.20,300,12,.4,650,0x252b42,{castShadow:false});
       this.addBox(-6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false});
-      this.addBox(6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false});
+      this.addBox(6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:1.25}});
+      this.addBox(-5.9,-.01,300,.12,.08,650,0x39e8ff,{castShadow:false,material:{emissive:0x21dfff,emissiveIntensity:2.2}});
+      this.addBox(5.9,-.01,300,.12,.08,650,0xed63ff,{castShadow:false,material:{emissive:0xd62dff,emissiveIntensity:2.0}});
       for(let z=0;z<650;z+=8){
         this.addBox(-2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
         this.addBox(2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
         if(z%32===0){this.addBox(-8,.65,z,1.2,1.3,1.2,0x7355b3);this.addBox(8,.65,z+12,1.2,1.3,1.2,0x3e9ba8);}
       }
+      for(let i=0;i<8;i++){
+        const z=18+i*76;
+        const side=i%2===0?-1:1;
+        this.addNightLamp(side*7.5,z,i%2===0?0x38eaff:0xee63ff);
+      }
+      const starVertices=[];
+      for(let i=0;i<150;i++){
+        const a=Math.random()*Math.PI*2,rad=50+Math.random()*95,y=25+Math.random()*75;
+        starVertices.push(Math.cos(a)*rad,y,Math.sin(a)*rad+120);
+      }
+      const starsGeo=new T.BufferGeometry();
+      starsGeo.setAttribute('position',new T.Float32BufferAttribute(starVertices,3));
+      this.scene.add(new T.Points(starsGeo,new T.PointsMaterial({color:0xe1e7ff,size:.55,transparent:true,opacity:.78,sizeAttenuation:true})));
       for(let i=0;i<110;i++){
         const lane=[-3.4,0,3.4][i%3],z=9+i*5.2;
         if(i%4!==2){const h=1.7+(i%2)*.5;const mesh=this.addBox(lane,h/2,z,1.9,h,1.6,i%2?0xdf61a7:0x63d6de);this.obstacles.push({x:lane,z,w:1.9,h:h,d:1.6,mesh});}
@@ -158,6 +195,14 @@ class Ablox3DEngine{
   fit(){
     const r=this.canvas.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);
     this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();
+  }
+  updateJoystick(e){
+    if(!this.joystickElement)return;
+    const r=this.joystickElement.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+    let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.34,len=Math.hypot(dx,dy);
+    if(len>max){dx=dx/len*max;dy=dy/len*max;}
+    this.joystick.x=dx/max;this.joystick.y=-dy/max;
+    if(this.joystickNub)this.joystickNub.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';
   }
   onKey(e,down){
     if(document.getElementById('gameView').hidden)return;
@@ -202,6 +247,7 @@ class Ablox3DEngine{
     window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('resize',this.resize);
     this.canvas.removeEventListener('pointerdown',this.pointerDown);window.removeEventListener('pointermove',this.pointerMove);window.removeEventListener('pointerup',this.pointerUp);window.removeEventListener('pointercancel',this.pointerUp);this.canvas.removeEventListener('wheel',this.wheel);
     this.touchButtons.forEach(b=>{b.removeEventListener('pointerdown',this.touchStart);b.removeEventListener('pointerup',this.touchEnd);b.removeEventListener('pointercancel',this.touchEnd);b.removeEventListener('pointerleave',this.touchEnd);});
+    if(this.joystickElement){this.joystickElement.removeEventListener('pointerdown',this.joystickDown);this.joystickElement.removeEventListener('pointermove',this.joystickMove);this.joystickElement.removeEventListener('pointerup',this.joystickUp);this.joystickElement.removeEventListener('pointercancel',this.joystickUp);}
     this.scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});
     this.renderer.dispose();
   }
@@ -216,7 +262,9 @@ class Ablox3DEngine{
     this.elapsed+=dt;const p=this.player,oldY=p.y;
     const left=this.keys.a||this.keys.ArrowLeft,right=this.keys.d||this.keys.ArrowRight;
     const forward=this.keys.w||this.keys.ArrowUp,back=this.keys.s||this.keys.ArrowDown,jump=this.keys.Space;
-    const inputX=(right?1:0)-(left?1:0),inputZ=(forward?1:0)-(back?1:0),length=Math.hypot(inputX,inputZ)||1;
+    const inputX=Math.max(-1,Math.min(1,(right?1:0)-(left?1:0)+this.joystick.x));
+    const inputZ=Math.max(-1,Math.min(1,(forward?1:0)-(back?1:0)+this.joystick.y));
+    const length=Math.hypot(inputX,inputZ)||1;
     let moveX=0,moveZ=0;
     if(this.game.type==='race'){
       p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));
@@ -227,6 +275,7 @@ class Ablox3DEngine{
       const speed=8;p.x+=moveX*speed*dt;p.z+=moveZ*speed*dt;
       if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(40,p.z));}
     }
+    this.lastMoveX=moveX;this.lastMoveZ=moveZ;
     if(jump&&p.ground){p.vy=10.5;p.ground=false;}
     p.vy-=25*dt;p.y+=p.vy*dt;
     if(this.game.type==='race'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
@@ -259,12 +308,8 @@ class Ablox3DEngine{
   }
   updateAvatar(dt,moving){
     const p=this.player;this.avatar.position.set(p.x,p.y,p.z);
-    if(this.game.type!=='race'&&(this.keys.w||this.keys.ArrowUp||this.keys.s||this.keys.ArrowDown||this.keys.a||this.keys.ArrowLeft||this.keys.d||this.keys.ArrowRight)){
-      const ix=(this.keys.d||this.keys.ArrowRight?1:0)-(this.keys.a||this.keys.ArrowLeft?1:0);
-      const iz=(this.keys.w||this.keys.ArrowUp?1:0)-(this.keys.s||this.keys.ArrowDown?1:0);
-      const dx=ix*Math.cos(this.yaw)-iz*Math.sin(this.yaw),dz=ix*Math.sin(this.yaw)+iz*Math.cos(this.yaw);
-      this.avatar.rotation.y=Math.atan2(dx,dz);
-    }else if(this.game.type==='race')this.avatar.rotation.y=0;
+    if(Math.hypot(this.lastMoveX||0,this.lastMoveZ||0)>.05)this.avatar.rotation.y=Math.atan2(this.lastMoveX,this.lastMoveZ);
+    else if(this.game.type==='race')this.avatar.rotation.y=0;
     this.animPhase=(this.animPhase||0)+(moving?dt*12:dt*2);
     const swing=moving?Math.sin(this.animPhase)*.48:Math.sin(this.animPhase)*.025;
     this.leftLeg.rotation.x=swing;this.rightLeg.rotation.x=-swing;this.leftArm.rotation.x=-swing*.8;this.rightArm.rotation.x=swing*.8;
