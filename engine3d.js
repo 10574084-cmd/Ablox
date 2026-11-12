@@ -17,6 +17,8 @@ class Ablox3DEngine{
     this.camera=new T.PerspectiveCamera(62,1,.1,800);
     this.renderer=new T.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+    this.renderer.toneMapping=T.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure=.9;
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;
     if('outputEncoding' in this.renderer)this.renderer.outputEncoding=T.sRGBEncoding;
     this.renderer.setClearColor(this.scene.background);
@@ -45,26 +47,26 @@ class Ablox3DEngine{
   addLights(){
     const T=this.T;
     if(this.game.type==='race'){
-      this.scene.add(new T.HemisphereLight(0x829cff,0x17152e,.48));
-      this.scene.add(new T.AmbientLight(0x252852,.42));
-      const moon=new T.DirectionalLight(0x9eabff,.72);moon.position.set(-22,34,-18);this.scene.add(moon);
-      const cyan=new T.PointLight(0x36e7ff,1.6,55,2);cyan.position.set(-7,9,8);this.scene.add(cyan);
-      const violet=new T.PointLight(0xb26aff,1.3,50,2);violet.position.set(7,8,44);this.scene.add(violet);
+      this.scene.add(new T.HemisphereLight(0x829cff,0x17152e,.24));
+      this.scene.add(new T.AmbientLight(0x252852,.20));
+      const moon=new T.DirectionalLight(0x9eabff,.38);moon.position.set(-22,34,-18);this.scene.add(moon);
+      const cyan=new T.PointLight(0x36e7ff,.72,42,2);cyan.position.set(-7,9,8);this.scene.add(cyan);
+      const violet=new T.PointLight(0xb26aff,.62,38,2);violet.position.set(7,8,44);this.scene.add(violet);
       return;
     }
-    this.scene.add(new T.HemisphereLight(0xeaf4ff,0x53616c,1.45));
-    const sun=new T.DirectionalLight(0xfff4df,2.0);sun.position.set(-18,28,-12);sun.castShadow=true;
+    this.scene.add(new T.HemisphereLight(0xeaf4ff,0x53616c,.72));
+    const sun=new T.DirectionalLight(0xfff4df,1.05);sun.position.set(-18,28,-12);sun.castShadow=true;
     sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=.5;sun.shadow.camera.far=180;
     this.scene.add(sun);
-    const fill=new T.DirectionalLight(0x9ebcff,.65);fill.position.set(15,12,25);this.scene.add(fill);
+    const fill=new T.DirectionalLight(0x9ebcff,.28);fill.position.set(15,12,25);this.scene.add(fill);
   }
   addNightLamp(x,z,color){
     const T=this.T;
     this.addBox(x,2.9,z,.22,5.8,.22,0x343853,{castShadow:false});
-    this.addBox(x,5.75,z,.8,.18,.8,color,{castShadow:false,material:{emissive:color,emissiveIntensity:2.1,metalness:.25,roughness:.3}});
+    this.addBox(x,5.75,z,.8,.18,.8,color,{castShadow:false,material:{emissive:color,emissiveIntensity:.85,metalness:.25,roughness:.3}});
     const glow=new T.Mesh(new T.SphereGeometry(.34,12,8),new T.MeshBasicMaterial({color:color}));
     glow.position.set(x,5.45,z);this.scene.add(glow);
-    const light=new T.PointLight(color,8.5,31,2);light.position.set(x,5.3,z);this.scene.add(light);
+    const light=new T.PointLight(color,2.0,23,2);light.position.set(x,5.3,z);this.scene.add(light);
     const halo=new T.Mesh(new T.SphereGeometry(.55,10,8),new T.MeshBasicMaterial({color:color,transparent:true,opacity:.08,depthWrite:false}));
     halo.position.copy(light.position);this.scene.add(halo);
   }
@@ -145,9 +147,9 @@ class Ablox3DEngine{
       this.addPlane(100,720,-.18,0x34304d);
       this.addBox(0,-.20,300,12,.4,650,0x252b42,{castShadow:false});
       this.addBox(-6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false});
-      this.addBox(6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:1.25}});
-      this.addBox(-5.9,-.01,300,.12,.08,650,0x39e8ff,{castShadow:false,material:{emissive:0x21dfff,emissiveIntensity:2.2}});
-      this.addBox(5.9,-.01,300,.12,.08,650,0xed63ff,{castShadow:false,material:{emissive:0xd62dff,emissiveIntensity:2.0}});
+      this.addBox(6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:.58}});
+      this.addBox(-5.9,-.01,300,.12,.08,650,0x39e8ff,{castShadow:false,material:{emissive:0x21dfff,emissiveIntensity:.85}});
+      this.addBox(5.9,-.01,300,.12,.08,650,0xed63ff,{castShadow:false,material:{emissive:0xd62dff,emissiveIntensity:.78}});
       for(let z=0;z<650;z+=8){
         this.addBox(-2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
         this.addBox(2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
@@ -267,11 +269,11 @@ class Ablox3DEngine{
     const length=Math.hypot(inputX,inputZ)||1;
     let moveX=0,moveZ=0;
     if(this.game.type==='race'){
-      p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));
+      p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=(-moveX*Math.cos(this.yaw))*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));
     }else{
       const c=Math.cos(this.yaw),s=Math.sin(this.yaw);
-      moveX=(inputX/length)*c-(inputZ/length)*s;
-      moveZ=(inputX/length)*s+(inputZ/length)*c;
+      moveX=-(inputX/length)*c-(inputZ/length)*s;
+      moveZ=-(inputX/length)*s+(inputZ/length)*c;
       const speed=8;p.x+=moveX*speed*dt;p.z+=moveZ*speed*dt;
       if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(40,p.z));}
     }
