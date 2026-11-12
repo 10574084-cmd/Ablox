@@ -226,10 +226,10 @@ class Ablox3DEngine{
       const speed=8;p.x+=moveX*speed*dt;p.z+=moveZ*speed*dt;
       if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(40,p.z));}
     }
-    if(jump&&p.ground&&this.game.type!=='race'){p.vy=10.5;p.ground=false;}
+    if(jump&&p.ground){p.vy=10.5;p.ground=false;}
     if(this.game.type!=='race'){
       p.vy-=25*dt;p.y+=p.vy*dt;
-      if(this.game.type==='obby'&&p.vy<=0){
+      if(this.game.type==='race'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}else if(this.game.type==='obby'&&p.vy<=0){
         for(const a of this.platforms){
           if(p.x>a.x-a.w/2+.15&&p.x<a.x+a.w/2-.15&&p.z>a.z-a.d/2+.15&&p.z<a.z+a.d/2-.15&&oldY>=a.h-.09&&p.y<=a.h){
             p.y=a.h;p.vy=0;p.ground=true;break;
