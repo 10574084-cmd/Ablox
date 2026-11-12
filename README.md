@@ -29,3 +29,7 @@ This is a static website. Publish the repository root (`/`) from the `main` bran
 
 ## Project note
 Ablox is a fan-made, independent project and is not affiliated with, endorsed by, or sponsored by Roblox Corporation. All game names, scenes, interface elements and code in this repository are original Ablox content.
+
+
+## Night lighting, mobile movement and fullscreen
+Neon Run has a night environment with moonlight, colored point lights, glowing track edges, lamp fixtures and stars. On touch screens, use the virtual joystick to move and the jump button to jump. The ⛶ button opens the game viewport in fullscreen; use it again or press Escape to exit.
