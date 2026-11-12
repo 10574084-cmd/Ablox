@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 const T=window.THREE;
+const $=id=>document.getElementById(id);
 if(!T){window.Ablox3DEngine=class{constructor(){throw new Error('No se pudo cargar Three.js. Comprueba tu conexión e inténtalo de nuevo.')}};return;}
 class Ablox3DEngine{
   constructor(canvas,game){
