@@ -2,34 +2,27 @@
 
 Ablox is an independent fan-made browser game hub featuring original 3D experiences created for this project.
 
-## Included experiences
-- **Sky Obby 3D** — jump between floating platforms and reach the finish.
-- **Coin Rush City** — explore a small 3D city and collect coins.
-- **Neon Run 3D** — dodge obstacles on a neon runner track.
+## Games
+- **Sky Obby 3D** — a longer floating-platform course with collectibles and a finish island.
+- **Coin Rush City** — explore a low-poly town and collect coins.
+- **Neon Run 3D** — a longer night runner with obstacles, neon signs and lamps.
+- **Roba un Brainrot** — collect six original silly creatures from the field and bring them back to your base.
+- **Roba un Huevo: Isla de Nidos** — find eight decorated eggs and return them to the incubator.
+- **Construye un Barco: Tesoro Perdido** — gather ten pieces of wood, build a boat, steer through a rocky river and collect treasure.
 
-## 3D engine and camera
-The games use **Three.js** with real WebGL 3D geometry, lighting, shadows, perspective and a block-style player character. Drag inside the game viewport to orbit the third-person camera. Use the mouse wheel or a two-finger pinch to zoom, and use the camera reset button to return to the default view. WASD / arrow keys move relative to the camera.
+## Shared character
+Every experience uses the same original block avatar with Ablox bacon-style hair, simple walk-cycle animation and third-person camera.
 
-Three.js is loaded from cdnjs, so the browser needs an internet connection to start a game.
+## Engine and controls
+The games use Three.js and WebGL geometry, real lighting and shadows. Drag inside the game viewport to rotate the camera. Use the wheel or a two-finger pinch to zoom. WASD / arrow keys move, Space jumps, and Escape pauses.
 
-## Run locally
-Open `index.html` in a modern browser with an internet connection, or serve this folder using any static HTTP server.
+On touch screens, the virtual joystick moves the character and the jump button jumps. The ⛶ button toggles fullscreen. The game catalog is horizontally swipeable, with arrow buttons for desktop.
+
+## Technology
+Static HTML, CSS and JavaScript. Three.js is loaded from cdnjs, so an internet connection is needed when starting a game. Game records and local best scores are stored in the browser.
 
 ## GitHub Pages
-This is a static website. Publish the repository root (`/`) from the `main` branch in GitHub Pages. The workflow in `.github/workflows/pages.yml` deploys the site on each push to `main`.
-
-## Controls
-- **WASD / Arrow keys** — move relative to the camera
-- **Space** — jump
-- **Mouse drag / finger drag** — rotate camera
-- **Mouse wheel / pinch** — zoom
-- **Camera reset button** — restore camera
-- **Escape** — pause
-- Touch movement controls appear on smaller screens.
+The root of the `main` branch is deployed by `.github/workflows/pages.yml` on every push.
 
 ## Project note
-Ablox is a fan-made, independent project and is not affiliated with, endorsed by, or sponsored by Roblox Corporation. All game names, scenes, interface elements and code in this repository are original Ablox content.
-
-
-## Night lighting, mobile movement and fullscreen
-Neon Run has a night environment with moonlight, colored point lights, glowing track edges, lamp fixtures and stars. On touch screens, use the virtual joystick to move and the jump button to jump. The ⛶ button opens the game viewport in fullscreen; use it again or press Escape to exit.
+Ablox is an independent fan-made project, not affiliated with or endorsed by Roblox Corporation. The creatures, environments, characters, maps, interface and code are original Ablox creations; the titles describe gameplay inspirations only.
