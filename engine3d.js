@@ -218,7 +218,7 @@ class Ablox3DEngine{
     const inputX=(right?1:0)-(left?1:0),inputZ=(forward?1:0)-(back?1:0),length=Math.hypot(inputX,inputZ)||1;
     let moveX=0,moveZ=0;
     if(this.game.type==='race'){
-      p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));p.y=0;p.vy=0;p.ground=true;
+      p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));
     }else{
       const c=Math.cos(this.yaw),s=Math.sin(this.yaw);
       moveX=(inputX/length)*c-(inputZ/length)*s;
@@ -227,17 +227,16 @@ class Ablox3DEngine{
       if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(40,p.z));}
     }
     if(jump&&p.ground){p.vy=10.5;p.ground=false;}
-    if(this.game.type!=='race'){
-      p.vy-=25*dt;p.y+=p.vy*dt;
-      if(this.game.type==='race'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}else if(this.game.type==='obby'&&p.vy<=0){
+    p.vy-=25*dt;p.y+=p.vy*dt;
+    if(this.game.type==='race'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
+    else if(this.game.type==='obby'&&p.vy<=0){
         for(const a of this.platforms){
           if(p.x>a.x-a.w/2+.15&&p.x<a.x+a.w/2-.15&&p.z>a.z-a.d/2+.15&&p.z<a.z+a.d/2-.15&&oldY>=a.h-.09&&p.y<=a.h){
             p.y=a.h;p.vy=0;p.ground=true;break;
           }
         }
         if(p.y< -9){p.x=0;p.y=0;p.z=0;p.vy=0;p.ground=true;this.flash=.45;}
-      }else if(this.game.type==='coin'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
-    }
+    }else if(this.game.type==='coin'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
     if(this.game.type==='race'){
       for(const o of this.obstacles)if(Math.abs(p.x-o.x)<1.3&&Math.abs(p.z-o.z)<1.35&&p.y<o.h){this.end(false,'¡Te chocaste!','Prueba otra vez y cambia de carril para esquivar los bloques.');return;}
       if(this.elapsed>=45){this.end(true,'¡Carrera completada!','Sobreviviste los 45 segundos. ¡Buen trabajo!');return;}
@@ -251,7 +250,7 @@ class Ablox3DEngine{
     if(this.game.type==='coin'&&this.coinsCollected>=15)this.end(true,'¡Ciudad explorada!','Encontraste las 15 monedas. ¡Eres un gran explorador!');
     if(this.game.type==='coin'&&this.elapsed>90)this.end(this.coinsCollected>=10,this.coinsCollected>=10?'¡Buen recorrido!':'¡Se acabó el tiempo!','Recogiste '+this.coinsCollected+' de 15 monedas.');
     this.score=Math.max(this.score,Math.floor(this.elapsed*(this.game.type==='race'?10:2))+this.coinsCollected*10);
-    this.saveBest();this.updateHud();this.updateAvatar(dt,Math.hypot(moveX,moveZ)>.05);
+    this.saveBest();this.updateHud();this.updateAvatar(dt,this.game.type==='race'||Math.hypot(moveX,moveZ)>.05);
   }
   updateHud(){
     $('hudValue').textContent=this.game.type==='race'?Math.floor(this.elapsed)+'s / 45s':this.coinsCollected+' / '+(this.game.type==='obby'?10:15);
