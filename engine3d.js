@@ -383,7 +383,7 @@ class Ablox3DEngine{
     const inputZ=Math.max(-1,Math.min(1,(forward?1:0)-(back?1:0)+this.joystick.y));
     const length=Math.hypot(inputX,inputZ)||1;let moveX=0,moveZ=0;
     if(this.game.type==='race'){p.z+=dt*13;moveX=inputX;p.x+=moveX*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));}
-    else if(this.game.type==='boat'&&this.boatPhase==='sail'){p.z+=dt*8.6;moveX=-inputX;p.x+=moveX*7.5*dt;p.x=Math.max(-6.5,Math.min(6.5,p.x));p.y=0;p.vy=0;p.ground=true;}
+    else if(this.game.type==='boat'&&this.boatPhase==='sail'){p.z+=dt*8.6;moveX=inputX;p.x+=moveX*7.5*dt;p.x=Math.max(-6.5,Math.min(6.5,p.x));p.y=0;p.vy=0;p.ground=true;}
     else if(this.game.type==='boat'&&this.boatPhase==='built'){p.y=0;p.vy=0;p.ground=true;}
     else{
       const c=Math.cos(this.yaw),sn=Math.sin(this.yaw);moveX=(inputX/length)*c-(inputZ/length)*sn;moveZ=(inputX/length)*sn+(inputZ/length)*c;
@@ -413,7 +413,7 @@ class Ablox3DEngine{
         this.boatHealth--;this.boatHitCooldown=1.15;p.z=Math.max(-4,p.z-1.4);this.flash=.35;
         if(this.boatHealth<=0){this.end(false,'¡El barco se rompió!','Las rocas dañaron el casco. Reúne madera, reconstruye tu barco y vuelve a intentarlo.');return;}break;
       }
-      if(this.boatGroup){this.boatGroup.position.set(p.x,-.08,p.z);this.boatGroup.rotation.z=-inputX*.08;this.boatGroup.rotation.x=Math.sin(this.elapsed*2)*.018;}
+      if(this.boatGroup){this.boatGroup.position.set(p.x,-.08,p.z);this.boatGroup.rotation.z=inputX*.08;this.boatGroup.rotation.x=Math.sin(this.elapsed*2)*.018;}
     }
     if(this.game.type==='boat'&&this.boatPhase==='gather'){
       for(const item of this.woodPickups)if(!item.got&&Math.hypot(p.x-item.x,p.z-item.z)<1.45){item.got=true;item.mesh.visible=false;this.woodCount++;this.score+=5;}
