@@ -9,7 +9,7 @@ class Ablox3DEngine{
     this.T=T;this.canvas=canvas;this.game=game;this.keys={};this.running=false;this.paused=false;this.messageShown=false;
     this.raf=0;this.last=0;this.elapsed=0;this.score=0;this.coinsCollected=0;this.flash=0;this.distance=10.5;
     this.yaw=0;this.pitch=.30;this.dragging=false;this.pointerPositions=new Map();this.pinchDistance=0;
-    this.player={x:0,y:0,z:0,vy:0,ground:true};this.platforms=[];this.coins=[];this.obstacles=[];this.stealables=[];this.eggItems=[];this.woodPickups=[];this.carriedVisuals=[];this.carriedCount=0;this.deliveredCount=0;this.woodCount=0;this.boatPhase='gather';this.boatHealth=3;this.boatHitCooldown=0;this.boatGroup=null;
+    this.player={x:0,y:0,z:0,vy:0,ground:true};this.platforms=[];this.coins=[];this.obstacles=[];this.stealables=[];this.eggItems=[];this.woodPickups=[];this.carriedVisuals=[];this.carriedCount=0;this.deliveredCount=0;this.woodCount=0;this.boatPhase='gather';this.boatHealth=3;this.boatHitCooldown=0;this.boatGroup=null;this.hatchedPets=[];
     this.best=this.readBest();
     this.scene=new T.Scene();
     this.scene.background=new T.Color(game.type==='race'?0x211b46:game.type==='coin'?0x7ec9cf:0x92b5e9);
@@ -224,6 +224,22 @@ class Ablox3DEngine{
     for(let k=0;k<3;k++){const plank=new T.Mesh(new T.BoxGeometry(1.25,.16,.28),this.material(k===1?0xb57c43:0x946038,.94));plank.position.set((k-1)*.08,k*.13,(k-1)*.12);plank.rotation.y=(k-1)*.12;plank.castShadow=true;group.add(plank);}
     this.scene.add(group);this.woodPickups.push({x,z,mesh:group,got:false});
   }
+  hatchEggs(){
+    const T=this.T,colors=[0xf2c36d,0x8ab8f1,0xe6a0c6,0x9ed8a2,0xb49be8,0xf3a27d,0xf0d5a0,0x8bd4cc];
+    this.hatchedPets.forEach(p=>this.scene.remove(p));this.hatchedPets=[];
+    for(let i=0;i<8;i++){
+      const pet=new T.Group(),color=colors[i],body=new T.Mesh(new T.SphereGeometry(.38,12,10),this.material(color,.7,.02));
+      body.scale.set(1.05,.9,.95);body.position.y=.52;body.castShadow=true;pet.add(body);
+      const head=new T.Mesh(new T.SphereGeometry(.27,12,10),this.material(color,.68,.02));head.position.set(0,.94,.17);head.castShadow=true;pet.add(head);
+      for(let side of [-1,1]){
+        const eye=new T.Mesh(new T.SphereGeometry(.045,8,6),this.material(0x202638));eye.position.set(side*.105,.98,.405);pet.add(eye);
+        const ear=new T.Mesh(new T.ConeGeometry(.09,.24,6),this.material(color));ear.position.set(side*.17,1.19,.12);ear.rotation.z=side*-.22;pet.add(ear);
+        const foot=new T.Mesh(new T.SphereGeometry(.11,8,6),this.material(0xeee0d0));foot.position.set(side*.17,.15,.05);pet.add(foot);
+      }
+      pet.position.set(-3.6+(i%4)*2.4,.05,-21+Math.floor(i/4)*2.1);pet.scale.setScalar(.12);pet.userData.targetScale=1;
+      this.scene.add(pet);this.hatchedPets.push(pet);
+    }
+  }
   addCarryVisual(kind,index){
     const T=this.T,palette=[0xff8c69,0x8c7dff,0x63c9a5,0xf2c35d,0xf07db2,0x77b8e8];let mesh;
     if(kind==='egg'){mesh=new T.Mesh(new T.SphereGeometry(.20,10,8),this.material([0xffd56b,0x8cbbff,0xe6a5ce,0x9fd8a8][index%4]));mesh.scale.y=1.25;}
@@ -331,7 +347,7 @@ class Ablox3DEngine{
   resetState(){
     this.elapsed=0;this.score=0;this.coinsCollected=0;this.messageShown=false;this.paused=false;this.flash=0;
     this.carriedCount=0;this.deliveredCount=0;this.woodCount=0;this.boatPhase='gather';this.boatHealth=3;this.boatHitCooldown=0;this.joystick.x=0;this.joystick.y=0;
-    this.clearCarriedVisuals();
+    this.clearCarriedVisuals();this.hatchedPets.forEach(p=>this.scene.remove(p));this.hatchedPets=[];
     const starts={coin:[0,-2],brainrot:[0,-20],egg:[0,-20],boat:[0,-20],obby:[0,0],race:[0,0]};
     const pos=starts[this.game.type]||[0,0];this.player={x:pos[0],y:0,z:pos[1],vy:0,ground:true};
     this.coins.forEach(c=>{c.got=false;c.mesh.visible=true;});this.stealables.forEach(c=>{c.got=false;c.mesh.visible=true;});
@@ -410,7 +426,7 @@ class Ablox3DEngine{
     if(this.game.type==='egg'){
       for(const item of this.eggItems)if(!item.got&&this.carriedCount<8&&Math.hypot(p.x-item.x,p.z-item.z)<1.55){item.got=true;item.mesh.visible=false;this.carriedCount++;this.score+=20;this.addCarryVisual('egg',this.carriedCount-1);}
       if(this.carriedCount>=8)$('stageTip').textContent='¡Tienes 8 huevos! Regresa al incubador';
-      if(this.carriedCount>0&&Math.hypot(p.x,p.z+20)<6.5){this.deliveredCount+=this.carriedCount;this.clearCarriedVisuals();this.carriedCount=0;if(this.deliveredCount>=8){this.end(true,'¡Incubadora completa!','Recuperaste ocho huevos y los llevaste a la incubadora.');return;}}
+      if(this.carriedCount>0&&Math.hypot(p.x,p.z+20)<6.5){this.deliveredCount+=this.carriedCount;this.clearCarriedVisuals();this.carriedCount=0;if(this.deliveredCount>=8){this.hatchEggs();this.end(true,'¡Eclosión completa!','Ocho huevos llegaron a la incubadora y nacieron ocho mascotas nuevas. ¡Colección completada!');return;}}
     }
     if(['coin','race','boat'].includes(this.game.type))for(const coin of this.coins)if(!coin.got&&Math.hypot(p.x-coin.x,p.z-coin.z)<1.25&&Math.abs(p.y+1-coin.y)<2.2){coin.got=true;coin.mesh.visible=false;this.coinsCollected++;this.score+=10;}
     if(this.game.type==='obby'&&p.z>107&&p.x>-4&&p.x<4&&p.y>=-.1){this.end(true,'¡Obby completado!','Llegaste a la isla final tras superar todas las plataformas y recoger monedas.');return;}
@@ -452,6 +468,7 @@ class Ablox3DEngine{
     this.stealables.forEach((c,i)=>{if(!c.got)c.mesh.position.y=.62+Math.sin(this.elapsed*2+i)*.10;});
     this.eggItems.forEach((c,i)=>{if(!c.got)c.mesh.rotation.z=Math.sin(this.elapsed*1.4+i)*.05;});
     this.woodPickups.forEach(c=>{if(!c.got)c.mesh.rotation.y+=dt*.45;});
+    this.hatchedPets.forEach(p=>{const s=Math.min(1,(p.scale.x||.12)+dt*1.7);p.scale.setScalar(s);p.position.y=.05+Math.sin(this.elapsed*3+p.position.x)*.08;});
     if(this.boatGroup&&this.boatPhase==='sail')this.boatGroup.position.y=-.08+Math.sin(this.elapsed*2)*.08;
     if(this.flash>0)this.flash=Math.max(0,this.flash-dt);
   }
