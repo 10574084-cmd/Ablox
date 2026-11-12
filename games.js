@@ -21,4 +21,7 @@ $('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.trim().t
 
 
 $('cameraResetBtn').addEventListener('click',()=>engine&&engine.resetCamera());
+function syncFullscreenButton(){const b=$('fullscreenBtn');if(!b)return;const active=!!document.fullscreenElement;b.textContent=active?'⤢':'⛶';b.title=active?'Salir de pantalla completa':'Pantalla completa';b.setAttribute('aria-label',b.title)}
+async function toggleFullscreen(){const stage=$('gameStage');try{if(document.fullscreenElement){await document.exitFullscreen()}else if(stage.requestFullscreen){await stage.requestFullscreen()}else if(stage.webkitRequestFullscreen){stage.webkitRequestFullscreen()}else{throw new Error('Pantalla completa no disponible en este navegador')}}catch(error){$('stageTip').textContent=error&&error.message?error.message:'No se pudo activar pantalla completa';}}
+$('fullscreenBtn').addEventListener('click',toggleFullscreen);document.addEventListener('fullscreenchange',syncFullscreenButton);
 })();
