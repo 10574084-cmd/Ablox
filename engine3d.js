@@ -376,7 +376,9 @@ class Ablox3DEngine{
     }
     this.lastMoveX=moveX;this.lastMoveZ=moveZ;
     if(jump&&p.ground){p.vy=10.5;p.ground=false;}
-    if(this.game.type!=='race'&&!(this.game.type==='boat'&&(this.boatPhase==='built'||this.boatPhase==='sail'))){
+    if(this.game.type==='race'){
+      p.vy-=25*dt;p.y+=p.vy*dt;if(p.y<0){p.y=0;p.vy=0;p.ground=true;}
+    }else if(!(this.game.type==='boat'&&(this.boatPhase==='built'||this.boatPhase==='sail'))){
       p.vy-=25*dt;p.y+=p.vy*dt;
       if(this.game.type==='obby'&&p.vy<=0){
         for(const a of this.platforms){if(p.x>a.x-a.w/2+.15&&p.x<a.x+a.w/2-.15&&p.z>a.z-a.d/2+.15&&p.z<a.z+a.d/2-.15&&oldY>=a.h-.09&&p.y<=a.h){p.y=a.h;p.vy=0;p.ground=true;break;}}
