@@ -21,3 +21,4 @@ $('searchInput').addEventListener('input',e=>{searchTerm=e.target.value.trim().t
 
 
 $('cameraResetBtn').addEventListener('click',()=>engine&&engine.resetCamera());
+})();
