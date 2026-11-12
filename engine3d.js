@@ -9,7 +9,7 @@ class Ablox3DEngine{
     this.T=T;this.canvas=canvas;this.game=game;this.keys={};this.running=false;this.paused=false;this.messageShown=false;
     this.raf=0;this.last=0;this.elapsed=0;this.score=0;this.coinsCollected=0;this.flash=0;this.distance=10.5;
     this.yaw=0;this.pitch=.30;this.dragging=false;this.pointerPositions=new Map();this.pinchDistance=0;
-    this.player={x:0,y:0,z:0,vy:0,ground:true};this.platforms=[];this.coins=[];this.obstacles=[];
+    this.player={x:0,y:0,z:0,vy:0,ground:true};this.platforms=[];this.coins=[];this.obstacles=[];this.stealables=[];this.eggItems=[];this.woodPickups=[];this.carriedVisuals=[];this.carriedCount=0;this.deliveredCount=0;this.woodCount=0;this.boatPhase='gather';this.boatHealth=3;this.boatHitCooldown=0;this.boatGroup=null;
     this.best=this.readBest();
     this.scene=new T.Scene();
     this.scene.background=new T.Color(game.type==='race'?0x211b46:game.type==='coin'?0x7ec9cf:0x92b5e9);
@@ -22,7 +22,7 @@ class Ablox3DEngine{
     this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;
     if('outputEncoding' in this.renderer)this.renderer.outputEncoding=T.sRGBEncoding;
     this.renderer.setClearColor(this.scene.background);
-    this.addLights();this.buildWorld();this.createAvatar();this.fit();
+    this.addLights();this.buildWorld();this.createAvatar();this.updateAvatar(0,false);this.fit();
     this.keyDown=e=>this.onKey(e,true);this.keyUp=e=>this.onKey(e,false);
     this.resize=()=>this.fit();
     this.pointerDown=e=>this.onPointerDown(e);this.pointerMove=e=>this.onPointerMove(e);
@@ -174,7 +174,87 @@ class Ablox3DEngine{
         if(i%3===0)this.addCoin([-3.4,0,3.4][(i+1)%3],1.2,z+1.5);
       }
       this.player={x:0,y:0,z:0,vy:0,ground:true};
+    }else if(g.type==='brainrot'){
+      this.scene.background=new T.Color(0x9dc9db);this.scene.fog=new T.Fog(0xb7d7df,65,150);
+      this.addPlane(90,120,-.16,0x65a86d);
+      this.addBox(0,-.05,-20,14,.45,12,0x3f8266);
+      this.addBox(0,.22,-20,9,.08,8,0x83c7a0,{castShadow:false});
+      for(let side of [-1,1]){this.addBox(side*15,.1,10,11,.35,12,side<0?0x9671ad:0xc47d90);this.addBox(side*15,1.05,4,.5,2.2,.5,0x684f69);this.addBox(side*15,1.05,16,.5,2.2,.5,0x684f69);}
+      [[-17,8],[-12,22],[-7,34],[-2,44],[5,17],[11,9],[17,29],[15,47],[3,55],[-10,52],[-19,38],[20,53]].forEach((p,i)=>this.createBrainrot(p[0],p[1],i));
+      for(let i=0;i<14;i++){const x=(i%2?1:-1)*(8+(i%4)*5),z=-8+i*4.2;this.addBox(x,.55,z,.45,1.1,.45,0x795c43);const tree=new T.Mesh(new T.SphereGeometry(1.25,10,8),this.material(i%2?0x478a59:0x579b65));tree.position.set(x,1.55,z);tree.castShadow=true;this.scene.add(tree);}
+      this.player={x:0,y:0,z:-20,vy:0,ground:true};
+    }else if(g.type==='egg'){
+      this.scene.background=new T.Color(0x9dc9d9);this.scene.fog=new T.Fog(0xc3ded8,55,135);
+      this.addPlane(100,115,-.18,0x6c9b67);
+      this.addBox(0,-.02,-20,13,.42,11,0x826548);this.addBox(0,.23,-20,8,.12,7,0x9e805c,{castShadow:false});
+      [[-17,-2],[-12,9],[-7,20],[0,31],[7,41],[13,51],[18,60],[14,34],[8,12],[1,55],[-9,43],[-16,28],[18,1],[-3,48]].forEach((p,i)=>this.createEgg(p[0],p[1],i));
+      for(let i=0;i<18;i++){const x=(i%6-2.5)*6.8,z=3+Math.floor(i/6)*17;this.addBox(x,.75,z,.55,1.5,.55,0x77503b);const crown=new T.Mesh(new T.SphereGeometry(1.45,10,8),this.material(i%2?0x3e8052:0x5b9860));crown.position.set(x,2,z);crown.castShadow=true;this.scene.add(crown);}
+      for(let i=0;i<6;i++)this.addBox((i-2.5)*4,.35,15+(i%2)*8,2.2,.7,.55,0x927a5c);
+      this.player={x:0,y:0,z:-20,vy:0,ground:true};
+    }else if(g.type==='boat'){
+      this.scene.background=new T.Color(0x78bdd2);this.scene.fog=new T.Fog(0x91ced9,75,260);
+      this.addPlane(160,520,-1.05,0x2e91ac);
+      const waterMat=this.material(0x4baabd,.28,.22,{transparent:true,opacity:.86});const water=new T.Mesh(new T.PlaneGeometry(160,520),waterMat);water.rotation.x=-Math.PI/2;water.position.set(0,-.95,180);water.receiveShadow=true;this.scene.add(water);
+      this.addBox(0,-.35,-11,38,.8,35,0xc9ad78);this.addBox(0,-.02,-11,28,.1,27,0xd8c18b,{castShadow:false});this.addBox(0,.02,-22,14,.3,5,0x76563a);
+      [[-14,-22],[-9,-16],[-4,-8],[3,-19],[10,-12],[15,-5],[-13,-2],[12,-24],[-7,-25],[6,-1],[-1,-13],[14,-19],[18,-9],[-17,-14]].forEach((p,i)=>this.createWoodPickup(p[0],p[1],i));
+      for(let i=0;i<18;i++)this.addCoin([-4,0,4][i%3],.95,14+i*12);
+      for(let i=0;i<22;i++){const lane=[-5.1,5.1,0,5.3,-4.8,0][i%6],z=25+i*9.8,radius=1.05+(i%3)*.18;const rock=new T.Mesh(new T.DodecahedronGeometry(radius,1),this.material(i%2?0x777d83:0x8b8983,.95));rock.position.set(lane,.25,z);rock.rotation.set(i*.3,i*.7,i*.18);rock.castShadow=true;rock.receiveShadow=true;this.scene.add(rock);this.obstacles.push({x:lane,z,w:radius*1.8,h:radius*1.8,d:radius*1.8,mesh:rock});}
+      for(let x of [-8,8])for(let z=10;z<220;z+=35)this.addBox(x,.25,z,1.4,.5,1.4,0x6f9872);
+      this.addBox(0,.15,220,10,.4,4,0x8c6540);this.addBox(0,1.05,220,3.6,1.5,2.3,0xc68e36);this.addBox(0,1.85,220,3.3,.28,2.1,0xf0c963);
+      this.player={x:0,y:0,z:-20,vy:0,ground:true};this.boatPhase='gather';this.woodCount=0;this.boatHealth=3;
     }
+  }
+  createBrainrot(x,z,index){
+    const T=this.T,palette=[0xff8c69,0x8c7dff,0x63c9a5,0xf2c35d,0xf07db2,0x77b8e8],group=new T.Group();group.position.set(x,.62,z);
+    const body=new T.Mesh(new T.IcosahedronGeometry(.66,1),this.material(palette[index%palette.length],.72,.03));body.scale.set(1.05,.86,.9);body.castShadow=true;group.add(body);
+    const belly=new T.Mesh(new T.SphereGeometry(.36,12,10),this.material(0xffe4bd));belly.position.set(0,-.12,.42);belly.scale.set(1,.82,.35);group.add(belly);
+    for(let side of [-1,1]){const eye=new T.Mesh(new T.SphereGeometry(.095,10,8),this.material(0xffffff));eye.position.set(side*.22,.18,.54);group.add(eye);const pupil=new T.Mesh(new T.SphereGeometry(.045,8,6),this.material(0x202235));pupil.position.set(side*.22,.17,.625);group.add(pupil);const horn=new T.Mesh(new T.ConeGeometry(.16,.38,6),this.material(index%2?0x4f476a:0x7d563c));horn.position.set(side*.4,.68,0);horn.rotation.z=side*-.32;group.add(horn);}
+    for(let side of [-1,1]){const foot=new T.Mesh(new T.BoxGeometry(.22,.27,.34),this.material(0x4c3d4d));foot.position.set(side*.27,-.57,.08);group.add(foot);}
+    this.scene.add(group);this.stealables.push({x,z,mesh:group,got:false,index});
+  }
+  createEgg(x,z,index){
+    const T=this.T,group=new T.Group();group.position.set(x,.72,z);const colors=[0xffd56b,0x8cbbff,0xe6a5ce,0x9fd8a8,0xc4a4ef,0xf4a27d];
+    const shell=new T.Mesh(new T.SphereGeometry(.48,18,14),this.material(colors[index%colors.length],.43,.06));shell.scale.set(.78,1.18,.78);shell.castShadow=true;group.add(shell);
+    const stripe=new T.Mesh(new T.TorusGeometry(.34,.055,8,22),this.material(0xfff0c2,.36,.12));stripe.rotation.x=Math.PI/2;stripe.position.y=-.04;group.add(stripe);
+    for(let k=0;k<3;k++){const spot=new T.Mesh(new T.SphereGeometry(.055,8,6),this.material(0xffffff,.42,.04));spot.position.set((k-1)*.16,.12,.32);group.add(spot);}
+    this.scene.add(group);this.eggItems.push({x,z,mesh:group,got:false,index});
+  }
+  createWoodPickup(x,z,index){
+    const T=this.T,group=new T.Group();group.position.set(x,.25,z);group.rotation.y=(index%3)*.37;
+    for(let k=0;k<3;k++){const plank=new T.Mesh(new T.BoxGeometry(1.25,.16,.28),this.material(k===1?0xb57c43:0x946038,.94));plank.position.set((k-1)*.08,k*.13,(k-1)*.12);plank.rotation.y=(k-1)*.12;plank.castShadow=true;group.add(plank);}
+    this.scene.add(group);this.woodPickups.push({x,z,mesh:group,got:false});
+  }
+  addCarryVisual(kind,index){
+    const T=this.T,palette=[0xff8c69,0x8c7dff,0x63c9a5,0xf2c35d,0xf07db2,0x77b8e8];let mesh;
+    if(kind==='egg'){mesh=new T.Mesh(new T.SphereGeometry(.20,10,8),this.material([0xffd56b,0x8cbbff,0xe6a5ce,0x9fd8a8][index%4]));mesh.scale.y=1.25;}
+    else mesh=new T.Mesh(new T.IcosahedronGeometry(.22,1),this.material(palette[index%palette.length]));
+    const col=index%3,row=Math.floor(index/3);mesh.position.set((col-1)*.38,3+row*.35,.12);mesh.castShadow=true;this.avatar.add(mesh);this.carriedVisuals.push(mesh);
+  }
+  clearCarriedVisuals(){this.carriedVisuals.forEach(m=>{this.avatar.remove(m);if(m.geometry)m.geometry.dispose();if(m.material)m.material.dispose();});this.carriedVisuals=[];}
+  buildBoat(){
+    const T=this.T;if(this.boatGroup)this.scene.remove(this.boatGroup);
+    const group=new T.Group(),wood=this.material(0x98633d,.9),lightWood=this.material(0xc28b50,.88),dark=this.material(0x62442f,.92);
+    const part=(geometry,mat,x,y,z,rx=0,ry=0,rz=0)=>{const m=new T.Mesh(geometry,mat);m.position.set(x,y,z);m.rotation.set(rx,ry,rz);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;};
+    part(new T.BoxGeometry(3.8,.58,6.4),dark,0,-.35,0);part(new T.ConeGeometry(1.9,2.2,4),wood,0,-.28,3.55,Math.PI/2,Math.PI/4,0);
+    for(let i=0;i<8;i++)part(new T.BoxGeometry(.47,.18,6.1),i%2?wood:lightWood,-1.65+i*.47,.04,0);
+    part(new T.BoxGeometry(.18,.48,6.1),dark,-2,.12,0);part(new T.BoxGeometry(.18,.48,6.1),dark,2,.12,0);
+    part(new T.BoxGeometry(4.1,.16,.24),lightWood,0,.34,-2.8);part(new T.BoxGeometry(4.1,.16,.24),lightWood,0,.34,2.8);
+    part(new T.CylinderGeometry(.12,.15,4.8,8),dark,0,2.7,-.25);
+    part(new T.PlaneGeometry(2.8,3.2),new T.MeshStandardMaterial({color:0xf2e5bd,side:T.DoubleSide,roughness:.9}),0,2.85,-.18);
+    part(new T.BoxGeometry(.8,.42,.06),this.material(0x7956ba),.45,4.85,-.22,0,0,-.15);
+    this.boatGroup=group;group.position.set(this.player.x,-.08,this.player.z);this.scene.add(group);
+  }
+  handleAction(){
+    if(this.game.type!=='boat')return;
+    const button=$('boatActionButton'),status=$('boatActionText');
+    if(this.boatPhase==='gather'&&this.woodCount>=10){
+      this.buildBoat();this.boatPhase='built';button.disabled=false;button.textContent='Lanzar barco';
+      status.textContent='¡Barco terminado! Pulsa para navegar hasta el cofre.';$('stageTip').textContent='Barco listo: lánzate al río';
+    }else if(this.boatPhase==='built'){
+      this.boatPhase='sail';this.player.x=0;this.player.y=0;this.player.z=-4;this.player.vy=0;this.boatGroup.position.set(0,-.08,-4);button.hidden=true;
+      status.textContent='¡A navegar!';$('stageTip').textContent='Esquiva las rocas y consigue 8 tesoros';
+    }
+    this.updateHud();
   }
   createAvatar(){
     const T=this.T;this.avatar=new T.Group();this.avatar.name='AbloxPlayer';
@@ -187,6 +267,18 @@ class Ablox3DEngine{
     part(this.avatar,.10,.10,.045,0x202638,-.15,2.13,.337);
     part(this.avatar,.10,.10,.045,0x202638,.15,2.13,.337);
     part(this.avatar,.19,.055,.04,0x9b4f52,0,1.92,.34);
+    const baconMat=this.material(0x874a32,.78,.02),baconLight=this.material(0xa75d3b,.74,.02);
+    const cap=new T.Mesh(new T.SphereGeometry(.39,12,9),baconMat);cap.scale.set(1.02,.42,.96);cap.position.set(0,2.52,0);cap.castShadow=true;this.avatar.add(cap);
+    const locks=[
+      [[-.28,2.55,.18],[-.38,2.68,.20],[-.27,2.72,.25],[-.32,2.35,.34],[-.25,2.12,.36]],
+      [[-.10,2.60,.23],[-.02,2.76,.26],[.08,2.70,.29],[.03,2.38,.37],[.13,2.17,.36]],
+      [[.14,2.59,.18],[.28,2.73,.12],[.37,2.64,.15],[.30,2.35,.34],[.36,2.14,.32]],
+      [[-.34,2.48,-.05],[-.52,2.53,-.16],[-.54,2.38,-.27],[-.47,2.12,-.25]],
+      [[.34,2.48,-.04],[.50,2.55,-.13],[.53,2.38,-.23],[.48,2.13,-.21]],
+      [[-.22,2.61,-.19],[-.22,2.72,-.28],[-.10,2.68,-.35],[-.02,2.54,-.38]],
+      [[.18,2.61,-.18],[.28,2.72,-.24],[.33,2.62,-.32],[.17,2.51,-.38]]
+    ];
+    locks.forEach((points,i)=>{const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(p[0],p[1],p[2])));const strand=new T.Mesh(new T.TubeGeometry(curve,16,.075,6,false),i%3===0?baconLight:baconMat);strand.castShadow=true;this.avatar.add(strand);});
     this.leftArm=new T.Group();this.leftArm.position.set(-.52,1.62,0);this.avatar.add(this.leftArm);part(this.leftArm,.25,.78,.28,0xf1bf8e,0,-.38,0);
     this.rightArm=new T.Group();this.rightArm.position.set(.52,1.62,0);this.avatar.add(this.rightArm);part(this.rightArm,.25,.78,.28,0xf1bf8e,0,-.38,0);
     this.leftLeg=new T.Group();this.leftLeg.position.set(-.22,.72,0);this.avatar.add(this.leftLeg);part(this.leftLeg,.30,.76,.34,0x283b78,0,-.36,0);
@@ -238,9 +330,15 @@ class Ablox3DEngine{
   }
   resetState(){
     this.elapsed=0;this.score=0;this.coinsCollected=0;this.messageShown=false;this.paused=false;this.flash=0;
-    this.player=this.game.type==='coin'?{x:0,y:0,z:-2,vy:0,ground:true}:{x:0,y:0,z:0,vy:0,ground:true};
-    this.coins.forEach(c=>{c.got=false;c.mesh.visible=true;});this.resetCamera();
-    $('gameMessage').hidden=true;$('pauseOverlay').hidden=true;this.updateHud();this.updateAvatar(0,false);this.updateCamera(1);
+    this.carriedCount=0;this.deliveredCount=0;this.woodCount=0;this.boatPhase='gather';this.boatHealth=3;this.boatHitCooldown=0;this.joystick.x=0;this.joystick.y=0;
+    this.clearCarriedVisuals();
+    const starts={coin:[0,-2],brainrot:[0,-20],egg:[0,-20],boat:[0,-20],obby:[0,0],race:[0,0]};
+    const pos=starts[this.game.type]||[0,0];this.player={x:pos[0],y:0,z:pos[1],vy:0,ground:true};
+    this.coins.forEach(c=>{c.got=false;c.mesh.visible=true;});this.stealables.forEach(c=>{c.got=false;c.mesh.visible=true;});
+    this.eggItems.forEach(c=>{c.got=false;c.mesh.visible=true;});this.woodPickups.forEach(c=>{c.got=false;c.mesh.visible=true;});
+    if(this.boatGroup){this.scene.remove(this.boatGroup);this.boatGroup=null;}
+    if(this.game.type==='boat'){$('boatActionButton').hidden=false;$('boatActionButton').disabled=true;$('boatActionButton').textContent='Construir barco';$('boatActionText').textContent='Recoge 10 tablones por la playa.';}
+    this.resetCamera();$('gameMessage').hidden=true;$('pauseOverlay').hidden=true;this.updateHud();this.updateAvatar(0,false);this.updateCamera(1);
   }
   restart(){cancelAnimationFrame(this.raf);this.running=false;this.keys={};this.resetState();this.start();}
   start(){if(this.running)return;this.running=true;this.last=performance.now();this.raf=requestAnimationFrame(t=>this.loop(t));}
@@ -262,50 +360,74 @@ class Ablox3DEngine{
   }
   update(dt){
     this.elapsed+=dt;const p=this.player,oldY=p.y;
-    const left=this.keys.a||this.keys.ArrowLeft,right=this.keys.d||this.keys.ArrowRight;
-    const forward=this.keys.w||this.keys.ArrowUp,back=this.keys.s||this.keys.ArrowDown,jump=this.keys.Space;
+    const left=this.keys.a||this.keys.ArrowLeft,right=this.keys.d||this.keys.ArrowRight,forward=this.keys.w||this.keys.ArrowUp,back=this.keys.s||this.keys.ArrowDown,jump=this.keys.Space;
     const inputX=Math.max(-1,Math.min(1,(right?1:0)-(left?1:0)+this.joystick.x));
     const inputZ=Math.max(-1,Math.min(1,(forward?1:0)-(back?1:0)+this.joystick.y));
-    const length=Math.hypot(inputX,inputZ)||1;
-    let moveX=0,moveZ=0;
-    if(this.game.type==='race'){
-      p.z+=dt*13;moveX=inputX;moveZ=0;p.x+=(-moveX*Math.cos(this.yaw))*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));
-    }else{
-      const c=Math.cos(this.yaw),s=Math.sin(this.yaw);
-      moveX=-(inputX/length)*c-(inputZ/length)*s;
-      moveZ=-(inputX/length)*s+(inputZ/length)*c;
+    const length=Math.hypot(inputX,inputZ)||1;let moveX=0,moveZ=0;
+    if(this.game.type==='race'){p.z+=dt*13;moveX=inputX; p.x+=(-moveX*Math.cos(this.yaw))*9*dt;p.x=Math.max(-3.7,Math.min(3.7,p.x));}
+    else if(this.game.type==='boat'&&this.boatPhase==='sail'){p.z+=dt*8.6;moveX=-inputX;p.x+=moveX*7.5*dt;p.x=Math.max(-6.5,Math.min(6.5,p.x));p.y=0;p.vy=0;p.ground=true;}
+    else if(this.game.type==='boat'&&this.boatPhase==='built'){p.y=0;p.vy=0;p.ground=true;}
+    else{
+      const c=Math.cos(this.yaw),sn=Math.sin(this.yaw);moveX=-(inputX/length)*c-(inputZ/length)*sn;moveZ=-(inputX/length)*sn+(inputZ/length)*c;
       const speed=8;p.x+=moveX*speed*dt;p.z+=moveZ*speed*dt;
-      if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(40,p.z));}
+      if(this.game.type==='coin'){p.x=Math.max(-20,Math.min(20,p.x));p.z=Math.max(-5,Math.min(45,p.z));}
+      if(this.game.type==='brainrot'||this.game.type==='egg'){p.x=Math.max(-23,Math.min(23,p.x));p.z=Math.max(-24,Math.min(62,p.z));}
+      if(this.game.type==='boat'&&this.boatPhase==='gather'){p.x=Math.max(-18,Math.min(18,p.x));p.z=Math.max(-28,Math.min(-1,p.z));}
     }
     this.lastMoveX=moveX;this.lastMoveZ=moveZ;
     if(jump&&p.ground){p.vy=10.5;p.ground=false;}
-    p.vy-=25*dt;p.y+=p.vy*dt;
-    if(this.game.type==='race'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
-    else if(this.game.type==='obby'&&p.vy<=0){
-        for(const a of this.platforms){
-          if(p.x>a.x-a.w/2+.15&&p.x<a.x+a.w/2-.15&&p.z>a.z-a.d/2+.15&&p.z<a.z+a.d/2-.15&&oldY>=a.h-.09&&p.y<=a.h){
-            p.y=a.h;p.vy=0;p.ground=true;break;
-          }
-        }
+    if(this.game.type!=='race'&&!(this.game.type==='boat'&&(this.boatPhase==='built'||this.boatPhase==='sail'))){
+      p.vy-=25*dt;p.y+=p.vy*dt;
+      if(this.game.type==='obby'&&p.vy<=0){
+        for(const a of this.platforms){if(p.x>a.x-a.w/2+.15&&p.x<a.x+a.w/2-.15&&p.z>a.z-a.d/2+.15&&p.z<a.z+a.d/2-.15&&oldY>=a.h-.09&&p.y<=a.h){p.y=a.h;p.vy=0;p.ground=true;break;}}
         if(p.y< -9){p.x=0;p.y=0;p.z=0;p.vy=0;p.ground=true;this.flash=.45;}
-    }else if(this.game.type==='coin'&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
+      }else if(['coin','brainrot','egg','boat'].includes(this.game.type)&&p.y<0){p.y=0;p.vy=0;p.ground=true;}
+    }
     if(this.game.type==='race'){
       for(const o of this.obstacles)if(Math.abs(p.x-o.x)<1.3&&Math.abs(p.z-o.z)<1.35&&p.y<o.h){this.end(false,'¡Te chocaste!','Prueba otra vez y cambia de carril para esquivar los bloques.');return;}
-      if(this.elapsed>=45){this.end(true,'¡Carrera completada!','Sobreviviste los 45 segundos. ¡Buen trabajo!');return;}
+      if(this.elapsed>=65){this.end(true,'¡Carrera completada!','Terminaste el circuito nocturno completo. ¡Nuevo récord!');return;}
     }
-    for(const coin of this.coins){
-      if(!coin.got&&Math.hypot(p.x-coin.x,p.z-coin.z)<1.15&&Math.abs(p.y+1-coin.y)<2.0){
-        coin.got=true;coin.mesh.visible=false;this.coinsCollected++;this.score+=10;
+    if(this.game.type==='boat'&&this.boatPhase==='sail'){
+      this.boatHitCooldown=Math.max(0,this.boatHitCooldown-dt);
+      for(const o of this.obstacles)if(this.boatHitCooldown<=0&&Math.abs(p.x-o.x)<1.65&&Math.abs(p.z-o.z)<1.65){
+        this.boatHealth--;this.boatHitCooldown=1.15;p.z=Math.max(-4,p.z-1.4);this.flash=.35;
+        if(this.boatHealth<=0){this.end(false,'¡El barco se rompió!','Las rocas dañaron el casco. Reúne madera, reconstruye tu barco y vuelve a intentarlo.');return;}break;
       }
+      if(this.boatGroup){this.boatGroup.position.set(p.x,-.08,p.z);this.boatGroup.rotation.z=-inputX*.08;this.boatGroup.rotation.x=Math.sin(this.elapsed*2)*.018;}
     }
-    if(this.game.type==='obby'&&p.z>45&&p.x>-4&&p.x<4&&p.y>=-.1)this.end(true,'¡Obby completado!','Llegaste a la isla final y recogiste '+this.coinsCollected+' monedas.');
-    if(this.game.type==='coin'&&this.coinsCollected>=15)this.end(true,'¡Ciudad explorada!','Encontraste las 15 monedas. ¡Eres un gran explorador!');
-    if(this.game.type==='coin'&&this.elapsed>90)this.end(this.coinsCollected>=10,this.coinsCollected>=10?'¡Buen recorrido!':'¡Se acabó el tiempo!','Recogiste '+this.coinsCollected+' de 15 monedas.');
-    this.score=Math.max(this.score,Math.floor(this.elapsed*(this.game.type==='race'?10:2))+this.coinsCollected*10);
-    this.saveBest();this.updateHud();this.updateAvatar(dt,this.game.type==='race'||Math.hypot(moveX,moveZ)>.05);
+    if(this.game.type==='boat'&&this.boatPhase==='gather'){
+      for(const item of this.woodPickups)if(!item.got&&Math.hypot(p.x-item.x,p.z-item.z)<1.45){item.got=true;item.mesh.visible=false;this.woodCount++;this.score+=5;}
+      if(this.woodCount>=10){$('boatActionButton').disabled=false;$('boatActionText').textContent='Ya tienes 10 tablones. ¡Construye tu barco!';$('stageTip').textContent='¡Madera completa! Construye tu barco';}
+      else{$('boatActionButton').disabled=true;$('boatActionText').textContent='Recoge tablones: '+this.woodCount+' / 10';$('stageTip').textContent='Explora la playa y recoge 10 tablones';}
+    }
+    if(this.game.type==='brainrot'){
+      for(const item of this.stealables)if(!item.got&&this.carriedCount<6&&Math.hypot(p.x-item.x,p.z-item.z)<1.65){item.got=true;item.mesh.visible=false;this.carriedCount++;this.score+=25;this.addCarryVisual('brainrot',this.carriedCount-1);}
+      if(this.carriedCount>=6)$('stageTip').textContent='¡Tienes 6 criaturas! Vuelve a tu base azul';
+      if(this.carriedCount>0&&Math.hypot(p.x,p.z+20)<6.5){this.deliveredCount+=this.carriedCount;this.clearCarriedVisuals();this.carriedCount=0;if(this.deliveredCount>=6){this.end(true,'¡Base llena!','Robaste y entregaste seis criaturas originales. ¡Tu colección está completa!');return;}}
+    }
+    if(this.game.type==='egg'){
+      for(const item of this.eggItems)if(!item.got&&this.carriedCount<8&&Math.hypot(p.x-item.x,p.z-item.z)<1.55){item.got=true;item.mesh.visible=false;this.carriedCount++;this.score+=20;this.addCarryVisual('egg',this.carriedCount-1);}
+      if(this.carriedCount>=8)$('stageTip').textContent='¡Tienes 8 huevos! Regresa al incubador';
+      if(this.carriedCount>0&&Math.hypot(p.x,p.z+20)<6.5){this.deliveredCount+=this.carriedCount;this.clearCarriedVisuals();this.carriedCount=0;if(this.deliveredCount>=8){this.end(true,'¡Incubadora completa!','Recuperaste ocho huevos y los llevaste a la incubadora.');return;}}
+    }
+    if(['coin','race','boat'].includes(this.game.type))for(const coin of this.coins)if(!coin.got&&Math.hypot(p.x-coin.x,p.z-coin.z)<1.25&&Math.abs(p.y+1-coin.y)<2.2){coin.got=true;coin.mesh.visible=false;this.coinsCollected++;this.score+=10;}
+    if(this.game.type==='obby'&&p.z>107&&p.x>-4&&p.x<4&&p.y>=-.1){this.end(true,'¡Obby completado!','Llegaste a la isla final tras superar todas las plataformas y recoger monedas.');return;}
+    if(this.game.type==='coin'&&this.coinsCollected>=25){this.end(true,'¡Ciudad explorada!','Encontraste 25 monedas en toda la ciudad. ¡Exploración completada!');return;}
+    if(this.game.type==='coin'&&this.elapsed>180){this.end(this.coinsCollected>=18,this.coinsCollected>=18?'¡Buen recorrido!':'¡Se acabó el tiempo!','Recogiste '+this.coinsCollected+' de 25 monedas.');return;}
+    if(this.game.type==='boat'&&this.boatPhase==='sail'){
+      if(p.z>=205&&this.coinsCollected>=8){this.end(true,'¡Tesoro encontrado!','Reuniste tablones, construiste tu barco y llegaste al cofre con '+this.coinsCollected+' tesoros.');return;}
+      if(p.z>=245){this.end(false,'¡Llegaste al final del río!','Necesitabas al menos ocho tesoros. Intenta otra ruta y recoge más cofres.');return;}
+    }
+    this.score=Math.max(this.score,Math.floor(this.elapsed*(this.game.type==='race'?10:2))+this.coinsCollected*10+this.deliveredCount*30);
+    this.saveBest();this.updateHud();this.updateAvatar(dt,this.game.type==='race'||(this.game.type==='boat'&&this.boatPhase==='sail')||Math.hypot(moveX,moveZ)>.05);
   }
   updateHud(){
-    $('hudValue').textContent=this.game.type==='race'?Math.floor(this.elapsed)+'s / 45s':this.coinsCollected+' / '+(this.game.type==='obby'?10:15);
+    if(this.game.type==='race'){$('hudLabel').textContent='TIEMPO';$('hudValue').textContent=Math.floor(this.elapsed)+' / 65 s';}
+    else if(this.game.type==='obby'){$('hudLabel').textContent='MONEDAS';$('hudValue').textContent=this.coinsCollected+' / 24';}
+    else if(this.game.type==='coin'){$('hudLabel').textContent='MONEDAS';$('hudValue').textContent=this.coinsCollected+' / 25';}
+    else if(this.game.type==='brainrot'){$('hudLabel').textContent='CRIATURAS';$('hudValue').textContent=this.deliveredCount+' entregadas · '+this.carriedCount+' contigo';}
+    else if(this.game.type==='egg'){$('hudLabel').textContent='HUEVOS';$('hudValue').textContent=this.deliveredCount+' incubados · '+this.carriedCount+' contigo';}
+    else if(this.game.type==='boat'){if(this.boatPhase==='sail'){$('hudLabel').textContent='TESOROS · CASCO '+this.boatHealth+'/3';$('hudValue').textContent=this.coinsCollected+' / 8';}else{$('hudLabel').textContent='MADERA';$('hudValue').textContent=this.woodCount+' / 10 tablones';}}
     $('bestValue').textContent=this.best;
   }
   updateAvatar(dt,moving){
@@ -325,6 +447,10 @@ class Ablox3DEngine{
   }
   animateWorld(dt){
     this.coins.forEach(c=>{if(!c.got){c.mesh.rotation.y+=dt*2.2;c.mesh.position.y=c.y+Math.sin(this.elapsed*3+c.phase)*.12;}});
+    this.stealables.forEach((c,i)=>{if(!c.got)c.mesh.position.y=.62+Math.sin(this.elapsed*2+i)*.10;});
+    this.eggItems.forEach((c,i)=>{if(!c.got)c.mesh.rotation.z=Math.sin(this.elapsed*1.4+i)*.05;});
+    this.woodPickups.forEach(c=>{if(!c.got)c.mesh.rotation.y+=dt*.45;});
+    if(this.boatGroup&&this.boatPhase==='sail')this.boatGroup.position.y=-.08+Math.sin(this.elapsed*2)*.08;
     if(this.flash>0)this.flash=Math.max(0,this.flash-dt);
   }
   end(win,title,desc){
