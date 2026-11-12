@@ -109,14 +109,14 @@ class Ablox3DEngine{
     const T=this.T,g=this.game;
     if(g.type==='obby'){
       this.addPlane(600,600,-13,0x89b4d9);
-      const platforms=[[0,0,8,8,0],[0,8,4.2,4.2,0],[4,14,3.7,3.7,1],[-2,20,4,4,1],[-5,27,4,4,0],[0,34,4,4,1],[5,41,4,4,1],[0,49,8,8,0]];
+      const platforms=[[0,0,8,8,0],[0,8,4.2,4.2,0],[4,14,3.7,3.7,1],[-2,20,4,4,1],[-5,27,4,4,0],[0,34,4,4,1],[5,41,4,4,1],[0,48,4.2,4.2,0],[-5,55,4,4,1],[-2,62,4,4,0],[4,69,4,4,1],[7,76,4.2,4.2,1],[1,83,4,4,0],[-5,90,4,4,1],[-2,97,4.2,4.2,1],[4,104,4,4,0],[0,112,9,9,0]];
       platforms.forEach((v,i)=>this.buildPlatform({x:v[0],z:v[1],w:v[2],d:v[3],h:v[4],color:[0x5d9e90,0xe5a66a,0x7f83c9,0x68b9b0][i%4]},i));
-      for(let i=0;i<10;i++){const p=this.platforms[Math.min(7,Math.floor(i*.8))];this.addCoin(p.x+(i%2?.8:-.8),p.h+1.15,p.z+(i%3-1)*1.35);}
+      for(let i=0;i<24;i++){const p=this.platforms[Math.min(this.platforms.length-1,Math.floor(i*(this.platforms.length-1)/23))];this.addCoin(p.x+(i%2?.85:-.85),p.h+1.15,p.z+(i%3-1)*1.25);}
       for(let i=0;i<20;i++)this.addCloud((i%5-2)*24, -2+(i%3)*2, 8+i*5,.9+(i%3)*.2);
-      this.addBox(0,1.3,49,.35,2.6,.35,0xe9eef7);
-      this.addBox(.85,2.25,49,1.6,.7,.12,0xffd16d);
-      const flag=new T.Mesh(new T.BoxGeometry(.52,.38,.04),this.material(0x8b73ff));flag.position.set(.85,2.45,49.1);this.scene.add(flag);
-      this.goal={x:0,z:49};
+      this.addBox(0,1.3,112,.35,2.6,.35,0xe9eef7);
+      this.addBox(.85,2.25,112,1.6,.7,.12,0xffd16d);
+      const flag=new T.Mesh(new T.BoxGeometry(.52,.38,.04),this.material(0x8b73ff));flag.position.set(.85,2.45,112.1);this.scene.add(flag);
+      this.goal={x:0,z:112};
     }else if(g.type==='coin'){
       this.scene.background=new T.Color(0x79c5d0);this.scene.fog=new T.Fog(0x9ccfc3,55,115);
       this.addPlane(70,70,-.08,0x78a978);
@@ -140,17 +140,17 @@ class Ablox3DEngine{
         this.addBox(x,.65,z,.28,1.3,.28,0x75533d);
         const crown=new T.Mesh(new T.SphereGeometry(1.15,10,8),this.material(i%2?0x4a9b70:0x5da578));crown.position.set(x,1.8,z);crown.castShadow=true;this.scene.add(crown);
       }
-      for(let i=0;i<19;i++)this.addCoin(((i*13)%34)-17,1.05,2+((i*7)%36));
+      for(let i=0;i<34;i++)this.addCoin(((i*13)%36)-18,1.05,-3+((i*11)%43));
       this.player={x:0,y:0,z:-2,vy:0,ground:true};
     }else if(g.type==='race'){
       this.scene.background=new T.Color(0x211b46);this.scene.fog=new T.Fog(0x46345f,90,310);
       this.addPlane(100,720,-.18,0x34304d);
-      this.addBox(0,-.20,300,12,.4,650,0x252b42,{castShadow:false});
-      this.addBox(-6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false});
-      this.addBox(6.25,-.08,300,.5,.25,650,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:.58}});
-      this.addBox(-5.9,-.01,300,.12,.08,650,0x39e8ff,{castShadow:false,material:{emissive:0x21dfff,emissiveIntensity:.85}});
-      this.addBox(5.9,-.01,300,.12,.08,650,0xed63ff,{castShadow:false,material:{emissive:0xd62dff,emissiveIntensity:.78}});
-      for(let z=0;z<650;z+=8){
+      this.addBox(0,-.20,440,12,.4,920,0x252b42,{castShadow:false});
+      this.addBox(-6.25,-.08,440,.5,.25,920,0x6a53a7,{castShadow:false});
+      this.addBox(6.25,-.08,440,.5,.25,920,0x6a53a7,{castShadow:false,material:{emissive:0x542ad1,emissiveIntensity:.58}});
+      this.addBox(-5.9,-.01,440,.12,.08,920,0x39e8ff,{castShadow:false,material:{emissive:0x21dfff,emissiveIntensity:.85}});
+      this.addBox(5.9,-.01,440,.12,.08,920,0xed63ff,{castShadow:false,material:{emissive:0xd62dff,emissiveIntensity:.78}});
+      for(let z=0;z<920;z+=8){
         this.addBox(-2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
         this.addBox(2,-.0,z,.09,.035,3.4,0x9e9bb7,{castShadow:false});
         if(z%32===0){this.addBox(-8,.65,z,1.2,1.3,1.2,0x7355b3);this.addBox(8,.65,z+12,1.2,1.3,1.2,0x3e9ba8);}
@@ -168,7 +168,7 @@ class Ablox3DEngine{
       const starsGeo=new T.BufferGeometry();
       starsGeo.setAttribute('position',new T.Float32BufferAttribute(starVertices,3));
       this.scene.add(new T.Points(starsGeo,new T.PointsMaterial({color:0xe1e7ff,size:.55,transparent:true,opacity:.78,sizeAttenuation:true})));
-      for(let i=0;i<110;i++){
+      for(let i=0;i<145;i++){
         const lane=[-3.4,0,3.4][i%3],z=9+i*5.2;
         if(i%4!==2){const h=1.7+(i%2)*.5;const mesh=this.addBox(lane,h/2,z,1.9,h,1.6,i%2?0xdf61a7:0x63d6de);this.obstacles.push({x:lane,z,w:1.9,h:h,d:1.6,mesh});}
         if(i%3===0)this.addCoin([-3.4,0,3.4][(i+1)%3],1.2,z+1.5);
